@@ -1,0 +1,29 @@
+[project]
+name = "instrumentacion-virtual"
+version = "0.1.0"
+description = "Herramientas para el control de instrumental de medicion"
+authors = [
+    {name = "Pablo De Cesare, Ramiro Rodriguez Colmeiro, Franco Zaccra"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pyvisa (>=1.15.0,<2.0.0)",
+    "pyvisa-py (>=0.8.0,<0.9.0)",
+    "pyserial (>=3.5,<4.0)",
+    "pyusb (>=1.3.1,<2.0.0)",
+    "numpy (>=2.3.1,<3.0.0)",
+    "matplotlib (>=3.10.3,<4.0.0)",
+    "scipy (>=1.16.0,<2.0.0)",
+    "pandas (>=2.3.1,<3.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.5"
+jupyter = "^1.1.1"
+
