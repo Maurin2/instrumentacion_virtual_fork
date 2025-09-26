@@ -42,6 +42,8 @@ class generador_arbitrario(Instrument):
     def setMemory(self):
         pass
 
+    def senoidal(self,freq=1e3,amp=0, canal = 0, offset = 0):
+        pass
     
 #------------------------------------------------------------------------------
 #------------------------- RigolDG5071 ------------------------------------------

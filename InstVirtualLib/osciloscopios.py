@@ -11,6 +11,7 @@ clase base "osciloscopio"
 
 
 """
+import bisect
 
 # Traemos la clase base que implmenta las funciones de VISA
 from instrument import Instrument
@@ -529,3 +530,93 @@ class rigol(Instrument):
  
         return time,data
 
+#------------------------------------------------------------------------------
+#------------------------- Sigilent 2102 ------------------------------------------
+#------------------------------------------------------------------------------
+
+
+class Sigilent2102(Instrument):
+    SET_CH1_VDIV = "C1:VDIV {}"
+    SET_CH2_VDIV = "C2:VDIV {}"
+    SET_CH3_VDIV = "C3:VDIV {}"
+    SET_CH4_VDIV = "C4:VDIV {}"
+
+    GET_CH1_VDIV = "C1:VDIV?"
+    GET_CH2_VDIV = "C2:VDIV?"
+    GET_CH3_VDIV = "C3:VDIV?"
+    GET_CH4_VDIV = "C4:VDIV?"
+
+    SET_BT = "TDIV {}"
+    GET_BT = "TDIV?"
+
+    VALID_SCALES = {
+        "VDIV": {
+            2e-3: "2MV", 5e-3: "5MV", 10e-3: "10MV",
+            20e-3: "20MV", 50e-3: "50MV", 100e-3: "100MV",
+            200e-3: "200MV", 500e-3: "500MV",
+            1: "1V", 2: "2V", 5: "5V", 10: "10V"
+        },
+        "TDIV": {
+            1e-9: "1NS", 2e-9: "2NS", 5e-9: "5NS",
+            10e-9: "10NS", 20e-9: "20NS", 50e-9: "50NS",
+            100e-9: "100NS", 200e-9: "200NS", 500e-9: "500NS",
+            1e-6: "1US", 2e-6: "2US", 5e-6: "5US", 10e-6: "10US", 20e-6: "20US", 50e-6: "50US",
+            100e-6: "100US", 200e-6: "200US", 500e-6: "500US",
+            1e-3: "1MS", 2e-3: "2MS", 5e-3: "5MS", 10e-3: "10MS", 20e-3: "20MS", 50e-3: "50MS",
+            100e-3: "100MS", 200e-3: "200MS", 500e-3: "500MS",
+            1: "1S", 2: "2S", 5: "5S", 10: "10S", 20: "20S", 50: "50S"
+        }
+    }
+
+    def __closest_valid(self, value: float, mode: str = "VDIV") -> str:
+        """
+        Busca en el diccionario, el valor mas cercano a value (que sea mas grande)
+        De esta forma, se puede automatizar setteo de VDIV y TDIV
+        """
+        scale_map = self.VALID_SCALES[mode]
+        valid_list = sorted(scale_map.keys()) # No deberia hacer nada por que ya esta sorteada, pero por las dudas
+
+        idx = bisect.bisect_left(valid_list, value)
+        if idx >= len(valid_list):
+            return scale_map[valid_list[-1]]  # máximo
+        return scale_map[valid_list[idx]]
+
+
+    def __init__(self, handler):
+        super().__init__(handler)
+
+    def set_BT(self, tiempo_div):
+        self.write(self.SET_BT.format(self.__closest_valid(tiempo_div, mode= "TDIV")))
+
+    def get_BT(self):
+        return self.query(self.GET_BT)
+
+    def set_chan_DIV(self, valor, canal):
+        if canal == 1:
+            self.write(self.SET_CH1_VDIV.format(self.__closest_valid(valor, mode="VDIV")))
+        elif canal == 2:
+            self.write(self.SET_CH2_VDIV.format(self.__closest_valid(valor, mode="VDIV")))
+        elif canal == 3:
+            self.write(self.SET_CH3_VDIV.format(self.__closest_valid(valor, mode="VDIV")))
+        else:
+            self.write(self.SET_CH4_VDIV.format(self.__closest_valid(valor, mode="VDIV")))
+        return None
+
+    def get_chan_DIV(self, canal):
+        """ Retorna string del factor de division vertical del canal"""
+        if canal == 1:
+            return self.query(self.GET_CH1_VDIV)
+        elif canal == 2:
+            return self.query(self.GET_CH2_VDIV)
+        elif canal == 3:
+            return self.query(self.GET_CH3_VDIV)
+        else:
+            return self.query(self.GET_CH4_VDIV)
+        return None
+
+    def get_trace(self, canal, sleep_time=2.0, ADQ_MODE='RAW', ADQ_STATE='RUN', ADQ_MEM_LENG='LONG', RETRIES=3,
+                  VERBOSE=1):
+        print("Hacer esta funcion de get_trace")
+        v = [1]
+        t = [1]
+        return t, v

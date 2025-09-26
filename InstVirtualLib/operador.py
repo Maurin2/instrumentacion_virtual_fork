@@ -14,6 +14,7 @@ modos.
 
 import numpy as np
 import mediciones
+from InstVirtualLib.generadores_arbitrarios import generador_arbitrario
 
 
 class Operador_osciloscopio(mediciones.Mediciones):
@@ -106,9 +107,21 @@ class Operador_osciloscopio(mediciones.Mediciones):
 
         return C
 
+    def calculate_fft_response(self, channel1, channel2):
+        t_filtro,v_filtro = self.instrument.get_trace(channel1, False)  # Canal del filtro
+        t_gen,v_gen = self.instrument.get_trace(channel2, False)  # Canal del generador (señal pura)
+        freq1_f, mag_f, fase_f = self.fft_componente_principal(t_filtro,v_filtro)
+        freq_gen, mag_gen, fase_gen = self.fft_componente_principal(t_gen,v_gen)
+        #   Obtenes mag2, Para darte una idea de que tan distinta es la tensin/freq
+        #   Que pusiste en el generador, de la que REALMENTE hay
+
+        diff_fase = fase_gen - fase_f
+
+        return freq1_f, mag_gen, mag_f, diff_fase
+
 class Operador_generador(mediciones.Mediciones):
     
-    def __init__(self,inst,operador):
+    def __init__(self,inst: generador_arbitrario,operador):
         # nombre del equipo dado por el usuario
         self.operador	= operador
         # Clase de instrumento
@@ -119,3 +132,39 @@ class Operador_generador(mediciones.Mediciones):
 
     def generar_AM(self, fc, fm, M, cant_muestras, offset, sample_rate=100000):
         pass
+
+    def generar_senoidal(self, channel, f, vpp):
+        vp = vpp/2
+        self.instrument.senoidal(self,f, vp, channel)
+
+class Operador_analisis_espectral(mediciones.Mediciones):
+
+    def __init__(self, generador:Operador_generador , osciloscopio:Operador_osciloscopio):
+        self.generador = generador
+        self.osciloscopio = osciloscopio
+
+    def get_bode_for_freq(self, vpp, freq, channel_osc1,channel_osc2 , channel_gen):
+        self.generador.generar_senoidal(channel_osc1, freq, vpp)
+
+        print("Agregarle un delay de 10 periodos (ponele)")
+        # await asyncio.sleep(10 * 1/freq)
+
+        freq, mag_gen, mag_f, diff_fase = self.osciloscopio.calculate_fft_response(channel_osc1, channel_osc2)
+
+        self.calculoIncertidumbreFft()
+
+        return freq, mag_f/mag_gen, diff_fase
+
+    def barrido_bode(self, freq_array, vpp, channel_osc, channel_gen):
+        v_array = []
+        freq_array = []
+        phase_array = []
+
+        for f in freq_array:
+            freq, mag ,phase = self.get_bode_for_freq(vpp, f, channel_osc1=channel_osc[1], channel_osc2 =channel_osc[1], channel_gen = channel_gen)
+            v_array.append(mag)
+            freq_array.append(freq)
+            phase_array.append(phase)
+
+        return v_array, freq_array, phase_array
+

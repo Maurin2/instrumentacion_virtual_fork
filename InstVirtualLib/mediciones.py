@@ -352,3 +352,8 @@ class Mediciones():
             print(f"Frecuencia {frecuencia}")
 
         return C
+
+    def calculoIncertidumbreFft(self):
+        print("Falta hacer la incertidumbre")
+        uc = 0.1
+        return uc
