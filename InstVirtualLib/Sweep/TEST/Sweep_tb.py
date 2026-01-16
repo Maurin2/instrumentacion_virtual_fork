@@ -31,7 +31,7 @@ F_START = 20.0          # Hz
 F_STOP = 20_000.0       # Hz
 NUM_POINTS = 5          # cantidad de puntos del sweep
 AMPLITUDE_VPP = 5.0     # Vpp
-SAVE_PATH = "../resultados_sweep"  # carpeta donde se guardan resultados
+SAVE_PATH = "../resultados_sweep2"  # carpeta donde se guardan resultados
 MEDICIONES_POR_FREQ = 3
 # ======================================================================================================================================
 # ====================== PARÁMETROS DE BARRIDO =========================================================================================
@@ -46,8 +46,8 @@ def run_sweep():
     t0 = time.time()
 
     ## ===================== CSV SETTINGS ========================
-    base_dir = "./mediciones/1kptos/"
-    #base_dir = "../resultados_sweep/"
+    #base_dir = "./mediciones/1kptos/"
+    base_dir = "../../resultados_sweep/"
 
     src = CsvSignalSource(base_dir)
     freqs_all = src.get_frequencies()

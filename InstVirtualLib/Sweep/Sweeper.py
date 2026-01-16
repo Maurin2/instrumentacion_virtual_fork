@@ -20,6 +20,7 @@ from InstVirtualLib.Sweep.Report_generator.Measurement_save import export_trace_
 from InstVirtualLib.Sweep.SweepAnalisis.Sweep_clasess.BloqueIO import BloqueIO
 from InstVirtualLib.Sweep.SweepAnalisis.Sweep_strategies import InputPeakBinSelector
 from InstVirtualLib.Sweep.SweepAnalisis.Sweep_utils import procesar_bloque
+from InstVirtualLib.Sweep.Report_generator.Report_maker import createReport
 
 sys.path.insert(0, "InstVirtualLib")
 from InstVirtualLib.osciloscopios import RIGOL_DS2202              # noqa: E402
@@ -29,9 +30,9 @@ from InstVirtualLib.generadores_arbitrarios import Siglent1032X    # noqa: E402
 # ====================== PARÁMETROS DE BARRIDO =========================================================================================
 # ======================================================================================================================================
 F_START = 20.0          # Hz
-F_STOP = 20_000.0       # Hz
-NUM_POINTS = 5          # cantidad de puntos del sweep
-AMPLITUDE_VPP = 5.0     # Vpp
+F_STOP = 80_000.0       # Hz
+NUM_POINTS = 50          # cantidad de puntos del sweep
+AMPLITUDE_VPP = 5     # Vpp
 SAVE_PATH = "../../resultados_sweep"  # carpeta donde se guardan resultados
 MEDICIONES_POR_FREQ = 3
 # ======================================================================================================================================
@@ -79,7 +80,7 @@ def run_sweep(gen: Siglent1032X, scope: RIGOL_DS2202):
     scope.set_memdepth("70000")
 
     peak_strategy = InputPeakBinSelector(ignore_dc=True)
-
+    time.sleep(10)
     # --------------- barrido en frecuencia ---------------
     for i, f in enumerate(freqs):
         print(f"\n[{i + 1}/{NUM_POINTS}] Frecuencia = {f:.1f} Hz")
@@ -131,8 +132,10 @@ def run_sweep(gen: Siglent1032X, scope: RIGOL_DS2202):
 
     gen.disable_output()
     clear_output(wait=True)
-
+        
     print(f"\nSweep terminado en {time.time() - t0:.1f} s")
+    gen.close()
+
     print("Barrido completado ✅")
 
     # ===================== RESULTADOS =====================
@@ -177,7 +180,7 @@ def run_sweep(gen: Siglent1032X, scope: RIGOL_DS2202):
     plt.show()
 
     print("Incertidumbres de fase:", incerts_phases)
-
+    
     return freqs, ganancias, incerts, phases_unwrapped, incerts_phases, ruidos
 
 
@@ -214,20 +217,19 @@ def init_instruments():
     rm2 = visa.ResourceManager()
 
     # Osciloscopio Rigol por VXI11
-    vxi11_instr = vxi11.Instrument("192.168.0.100")  # TODO: parametrizar IP
+    vxi11_instr = vxi11.Instrument("10.42.0.47")  # TODO: parametrizar IP
     scope = RIGOL_DS2202(handler=None, VXI11=vxi11_instr)
 
     # Generador Siglent por VISA TCPIP
-    gen_handler = rm2.open_resource("TCPIP::192.168.0.101::5025::INSTR")
-    gen = Siglent1032X(gen_handler)
+    rm=visa.ResourceManager()
+    instrument_handler=rm.open_resource(rm.list_resources()[-2])
+    gen = Siglent1032X(instrument_handler)
 
     return gen, scope
 
-"""
 if __name__ == "__main__":
     print("Comenzando barrido de frecuencia...\n")
     generador, osciloscopio = init_instruments()
     freqs, ganancias, incerts, phases_unwrapped, incerts_phases, ruidos = run_sweep(generador, osciloscopio)
     assets_dir = "./Report_generator/assets"
     createReport(freqs, ganancias, incerts, phases_unwrapped, incerts_phases, ruidos, assets_dir)
-"""

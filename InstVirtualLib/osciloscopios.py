@@ -897,6 +897,122 @@ class RIGOL_DS2202 (osciloscopio):
        
         return x, y
 
+    def get_trace_bis(self, canal=1, VERBOSE=1):
+        """
+        Lectura RAW correcta para Rigol DS2202 (firmware 00.01.xx)
+        Usando WAV:RES / WAV:BEG / WAV:STAT? / WAV:DATA?
+        sin query_binary_values(), usando read_raw().
+        """
+
+        import numpy as np
+        import time
+
+        source = f"CHAN{canal}"
+
+        # --- 1) STOP y memory depth ---
+        self.write(":STOP")
+        time.sleep(0.05)
+
+        n_pts = int(float(self.query(":ACQ:MDEP?")))
+        if VERBOSE:
+            print(f"[INFO] Esperando {n_pts} puntos...")
+
+        # --- 2) Configurar waveform RAW ---
+        self.write(f":WAV:SOUR {source}")
+        self.write(":WAV:MODE RAW")
+        self.write(":WAV:FORM BYTE")
+        self.write(":WAV:STAR 1")
+        self.write(f":WAV:STOP {n_pts}")
+
+        # Resetear buffer interno
+        self.write(":WAV:RES")
+        time.sleep(0.05)
+
+        # --- 3) Leer preámbulo ---
+        pre = self.query(":WAV:PRE?").split(',')
+
+        XINCR = float(pre[4])
+        XORIG = float(pre[5])
+        YINCR = float(pre[7])
+        YORIG = float(pre[8])     # NOTA: en tu DS2202 vienen como float
+        YREF  = float(pre[9])
+
+        if VERBOSE:
+            print(f"[PRE] XINCR={XINCR}, XORIG={XORIG}, YINCR={YINCR}")
+
+        # Función de normalización
+        def normalize(raw_y):
+            y = raw_y.astype(np.float64)
+            y -= (YORIG + YREF)
+            y *= YINCR
+            return y
+
+        # --- 4) Iniciar lectura RAW ---
+        self.write(":WAV:BEG")
+        chunks = []
+        count = 0
+        while True:
+            status = self.query(":WAV:STAT?")
+            is_done = status.startswith("IDLE")
+            pts_ready = int(status[5:])
+            if count == 5:
+                print("skipping function")
+                break
+
+
+            if pts_ready == 0:
+                count = count + 1
+                if VERBOSE:
+                    print("  [WAIT] No hay puntos listos...")
+                time.sleep(0.05)
+                continue
+            else:
+                count = 0
+            
+
+            if VERBOSE:
+                print(f"  [READ] Leyendo {pts_ready} puntos...")
+
+            # --- LEER CHUNK USANDO read_raw() ---
+            self.write(":WAV:DATA?")
+            raw = self.read_raw()
+
+            # Decodificar bloque TMC
+            if raw[0:1] != b"#":
+                if VERBOSE:
+                    print("  [WARN] paquete inválido, reintentando...")
+                time.sleep(0.05)
+                continue
+
+            digits = int(raw[1:2])
+            nbytes = int(raw[2:2+digits])
+            payload = raw[2+digits : 2+digits+nbytes]
+
+            data = np.frombuffer(payload, dtype=np.uint8)
+            chunks.append(data)
+
+            if is_done:
+                break
+
+            time.sleep(0.02)
+
+        # Finalizar RAW
+        self.write(":WAV:END")
+
+        # --- 5) Unir chunks ---
+        if len(chunks) == 0:
+            raise RuntimeError("El osciloscopio no devolvió ningún chunk de datos RAW.")
+
+        raw_data = np.concatenate(chunks)
+
+        # --- 6) Convertir a voltios ---
+        y = normalize(raw_data)
+        x = XORIG + np.arange(len(y)) * XINCR
+
+        self.write(":RUN")
+        return x, y
+
+
 
 
 

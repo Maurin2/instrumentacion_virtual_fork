@@ -14,7 +14,7 @@ import sys
 sys.path.insert(0, 'InstVirtualLib')
 import platform
 # Traemos el generador
-from InstVirtualLib.generadores_arbitrarios import Agilent33512A
+from InstVirtualLib.generadores_arbitrarios import Siglent1032X
 # Siempre util numpy y scipy...
 import numpy as np
 from scipy import signal
@@ -26,16 +26,16 @@ def excepthook(type, value, traceback):
 sys.excepthook = excepthook
 
 # Device a utilizar de la lista
-USE_DEVICE = 0
-
+USE_DEVICE = -2
 # Abrimos el instrumento con el backend correcto
 platforma = platform.platform()
 print(platforma)
 rm=visa.ResourceManager()
+print(rm.list_resources())
 
 # Instancio el instrumento
 instrument_handler=rm.open_resource(rm.list_resources()[USE_DEVICE])
-MiGenArb = Agilent33512A(instrument_handler)
+MiGenArb = Siglent1032X(instrument_handler)
 
 # Informamos el modelo del generador conectado
 print("Esta conectado un %s"%MiGenArb.INSTR_ID)
