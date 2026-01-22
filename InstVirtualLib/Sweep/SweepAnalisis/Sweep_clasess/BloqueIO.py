@@ -229,7 +229,7 @@ class UncertAnalyzer:
     def sigma_R_from_block(cls, bloque, entrada="in", fft_norm="none"):
         sigma_t = bloque.get_ruido(entrada=entrada)
 
-        ffts, freqs, N_time, cg = bloque._stack_ffts(entrada)  # 👈 actualizado
+        ffts, freqs, N_time, cg = bloque._stack_ffts(entrada)
         xs = bloque._stack_time_signals(entrada)
         M, N = xs.shape
 

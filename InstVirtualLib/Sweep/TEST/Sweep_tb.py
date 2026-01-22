@@ -20,6 +20,7 @@ from InstVirtualLib.Sweep.Report_generator.Report_maker import createReport
 from InstVirtualLib.Sweep.SweepAnalisis.Sweep_clasess.BloqueIO import BloqueIO
 from InstVirtualLib.Sweep.SweepAnalisis.Sweep_strategies import InputPeakBinSelector
 from InstVirtualLib.Sweep.SweepAnalisis.Sweep_utils import procesar_bloque
+from InstVirtualLib.Sweep.TEST.Patron_tb import plot_sweeps_from_file
 from InstVirtualLib.Sweep.TEST.Utils_tb import CsvSignalSource
 
 sys.path.insert(0, "InstVirtualLib")
@@ -35,6 +36,8 @@ SAVE_PATH = "../resultados_sweep"  # carpeta donde se guardan resultados
 MEDICIONES_POR_FREQ = 3
 # ======================================================================================================================================
 # ====================== PARÁMETROS DE BARRIDO =========================================================================================
+BASE_DIR_PATRON = "./MedisionesFinales/MEDICIONES_PATRON/PASA BAJOS 20K/PB-20K-M.csv"
+BASE_DIR_MEDICION = "MedisionesFinales/MEDICIONES_PROYECTO/PASA BAJOS 20K"
 
 
 # ===================== FUNCIONES AUXILIARES ========================
@@ -46,10 +49,10 @@ def run_sweep():
     t0 = time.time()
 
     ## ===================== CSV SETTINGS ========================
-    base_dir = "./mediciones/1kptos/"
-    #base_dir = "../resultados_sweep/"
 
-    src = CsvSignalSource(base_dir)
+    #BASE_DIR_MEDICION = "../resultados_sweep/"
+
+    src = CsvSignalSource(BASE_DIR_MEDICION)
     freqs_all = src.get_frequencies()
     # si querés usar todas las frecuencias del CSV:
     freq_indices = list(range(len(freqs_all)))
@@ -98,12 +101,6 @@ def run_sweep():
             # Adquirir trazas
             f_in, fs_in, t_in, v_in = src.get_input(freq_idx=i, medicion=meds_ok[j])
             f_out, fs_out, t_out, v_out = src.get_output(freq_idx=i, medicion=meds_ok[j])
-            """"
-            plt.plot(t_in, v_in)
-            plt.plot(t_in, v_in)
-            plt.show()
-            input("pulse pa avasnsar")
-            """
             amp_noise = 5
             noise_in = amp_noise * rng.normal(0.0, 0.01, len(v_in))
             noise_out = amp_noise * rng.normal(0.0, 0.01, len(v_out))
@@ -155,6 +152,7 @@ def run_sweep():
     ax1.set_ylabel("Ganancia [dB]")
     ax1.grid(True, which="both")
     ax1.legend(loc="best")
+    plot_sweeps_from_file(BASE_DIR_PATRON, ax = ax1)
 
     # ---- Gráfico de Fase ----
     phases_unwrapped = np.unwrap(phases)
@@ -205,7 +203,6 @@ def saveResults():
 
 if __name__ == "__main__":
     print("Comenzando barrido de frecuencia...\n")
-
     freqs,ganancias, incerts, phases_unwrapped, incerts_phases, ruidos = run_sweep()
     assets_dir = "../Report_generator/assets"
     createReport(freqs,ganancias, incerts, phases_unwrapped, incerts_phases, ruidos, assets_dir)
