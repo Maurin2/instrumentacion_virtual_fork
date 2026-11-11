@@ -6,10 +6,7 @@ Archivo para probar la funcion medir_RC de Operador_osciloscopio.
 
 """
 import matplotlib.pyplot as plt
-# Traemos el import vxi11
 import time
-# Traemos el import vxi11
-import vxi11
 # Traemos la libreria VISA
 import pyvisa as visa
 # Traemos matplotlib para poder graficar
@@ -23,9 +20,10 @@ from InstVirtualLib.osciloscopios import RIGOL_DS2202
 # Traemos el operador
 import operador
 
-VXI11 = vxi11.Instrument("10.42.0.47")
+rm = visa.ResourceManager()
+handler = rm.open_resource("TCPIP::10.42.0.47::INSTR", timeout=10000)
 
-MiOsciloscopio = RIGOL_DS2202(handler=None, VXI11=VXI11)
+MiOsciloscopio = RIGOL_DS2202(handler)
 
 
 # Informamos el modelo del osciloscopio conectado

@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 
 import time
-import vxi11
 import pyvisa as visa
 
 # Agreamos el path de las librerias

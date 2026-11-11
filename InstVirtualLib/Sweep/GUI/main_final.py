@@ -1,5 +1,4 @@
 import pyvisa
-import vxi11
 
 from InstVirtualLib.Sweep.GUI.ui_final import App
 from InstVirtualLib.instrument import Instrument

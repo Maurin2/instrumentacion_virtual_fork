@@ -1,10 +1,10 @@
-from vxi11 import vxi11
+import pyvisa
 
 from InstVirtualLib.osciloscopios import RIGOL_DS2202
 
 if __name__ == "__main__":
-    vxi11_instr = vxi11.Instrument("192.168.0.101")  # TODO: parametrizar IP
-    scope = RIGOL_DS2202(handler=None, VXI11=vxi11_instr)
+    scope_handler = pyvisa.ResourceManager().open_resource("TCPIP::192.168.0.101::INSTR", timeout=10000)  # TODO: parametrizar IP
+    scope = RIGOL_DS2202(scope_handler)
     idn = scope.print_ID()
     scope.close()
     print(f"EL IDN es: {idn}")

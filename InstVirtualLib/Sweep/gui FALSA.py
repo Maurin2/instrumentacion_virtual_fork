@@ -13,7 +13,6 @@ import re
 # ==========================
 # Backend "@py" = pyvisa-py (no NI-VISA)
 import pyvisa
-from vxi11 import vxi11
 
 from InstVirtualLib.instrument import Instrument
 from InstVirtualLib.osciloscopios import RIGOL_DS2202
@@ -104,8 +103,8 @@ def consultar_idn(ip: str):
     """
     # 1) RAW SOCKET por puertos típicos
     try:
-        xi11_instr = vxi11.Instrument("10.42.0.47")  # TODO: parametrizar IP
-        scope = RIGOL_DS2202(handler=None, VXI11=xi11_instr)
+        scope_handler = RM.open_resource("TCPIP::10.42.0.47::INSTR", timeout=10000)  # TODO: parametrizar IP
+        scope = RIGOL_DS2202(scope_handler)
         return scope.print_ID()
     except Exception:
         pass

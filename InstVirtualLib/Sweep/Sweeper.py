@@ -13,7 +13,6 @@ import platform
 import numpy as np
 import matplotlib.pyplot as plt
 import pyvisa as visa
-import vxi11
 from IPython.core.display_functions import clear_output
 
 from InstVirtualLib.Sweep.Report_generator.Measurement_save import export_trace_to_csv
@@ -225,16 +224,17 @@ def saveResults():
 
 
 def init_instruments(ip_gen="192.168.0.100", ip_osc="192.168.0.101"):
-    """Inicializa VISA + VXI11 y devuelve (generador, osciloscopio)."""
+    """Inicializa VISA (TCPIP) y devuelve (generador, osciloscopio)."""
     print("Inicializando instrumentos...")
     print("Plataforma:", platform.platform())
 
     rm1 = visa.ResourceManager()
     rm2 = visa.ResourceManager()
 
-    # Osciloscopio Rigol por VXI11
-    vxi11_instr = vxi11.Instrument(ip_osc)  # TODO: parametrizar IP
-    scope = RIGOL_DS2202(handler=None, VXI11=vxi11_instr)
+    # Osciloscopio Rigol por VISA TCPIP (VXI-11). Timeout de 10 s, el mismo que tenía
+    # python-vxi11: el default de pyvisa (2 s) puede cortar la lectura de trazas largas.
+    scope_handler = rm1.open_resource("TCPIP::" + ip_osc + "::INSTR", timeout=10000)
+    scope = RIGOL_DS2202(scope_handler)
 
     # Generador Siglent por VISA TCPIP
     gen_handler = rm2.open_resource("TCPIP::"+ ip_gen+"::INSTR")

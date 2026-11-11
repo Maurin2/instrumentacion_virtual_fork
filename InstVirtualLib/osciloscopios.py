@@ -28,7 +28,7 @@ from InstVirtualLib.instrument import Instrument
 
 class osciloscopio(Instrument):
     
-    def __init__(self,handler, VXI11):
+    def __init__(self,handler):
 
         # comandos del vertical CH1
         SET_CH1_VDIV=""
@@ -44,7 +44,7 @@ class osciloscopio(Instrument):
         SET_COUPLING=""
         GET_COUPLING=""
 
-        super().__init__(handler, VXI11)
+        super().__init__(handler)
 
     # ---- Canal Vertical
     def set_chan_DIV(self,valor,canal):
@@ -690,8 +690,8 @@ class SDS2102(osciloscopio):
 #------------------------------------------------------------------------------
 
 class RIGOL_DS2202 (osciloscopio):
-    def __init__(self, handler, VXI11):
-        super().__init__(handler, VXI11)
+    def __init__(self, handler):
+        super().__init__(handler)
         
         self.SET_CH1_VDIV="CHAN1:SCAL {}"
         self.SET_CH2_VDIV="CHAN2:SCAL {}"

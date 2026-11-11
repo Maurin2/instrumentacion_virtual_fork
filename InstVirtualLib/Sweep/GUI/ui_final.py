@@ -7,7 +7,7 @@ from tkinter import filedialog
 import ttkbootstrap as tb
 from ttkbootstrap.constants import *
 from ttkbootstrap.widgets import ToastNotification
-import vxi11
+import pyvisa
 
 # Iconos vectoriales builtin (con fallback)
 try:
@@ -355,8 +355,8 @@ class App(tb.Window):
 
     def _idn_worker(self, ip: str):
         try:
-            vxi11_instr = vxi11.Instrument(ip)
-            scope = RIGOL_DS2202(handler=None, VXI11=vxi11_instr)
+            scope_handler = pyvisa.ResourceManager().open_resource(f"TCPIP::{ip}::INSTR", timeout=10000)
+            scope = RIGOL_DS2202(scope_handler)
             idn = scope.print_ID()
             try:
                 scope.close()

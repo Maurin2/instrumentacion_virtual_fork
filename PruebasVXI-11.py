@@ -1,11 +1,11 @@
-import vxi11
+import pyvisa
 import numpy as np
 import matplotlib.pyplot as plt
 
 
 def read_data(IP, CHANN, timeout=10000):
-    # --- CONEXIÓN ---
-    scope = vxi11.Instrument(IP)
+    # --- CONEXIÓN (VXI-11 nativo de pyvisa-py) ---
+    scope = pyvisa.ResourceManager().open_resource(f"TCPIP::{IP}::INSTR")
     scope.timeout = timeout  # ms
 
     # --- CONFIGURACIÓN DE CAPTURA ---
@@ -15,7 +15,7 @@ def read_data(IP, CHANN, timeout=10000):
 
 
     # --- LECTURA DEL PREÁMBULO (ESCALAS) ---
-    preamble = scope.ask(":WAV:PRE?").split(',')
+    preamble = scope.query(":WAV:PRE?").split(',')
     # índices según Rigol:
     # [0]FORMAT,[1]TYPE,[2]POINTS,[3]COUNT,[4]XINCR,[5]XORIG,[6]XREF,[7]YINCR,[8]YORIG,[9]YREF
     XINCR = float(preamble[4])
