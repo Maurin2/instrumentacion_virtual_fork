@@ -691,6 +691,7 @@ class SDS2102(osciloscopio):
 
 class RIGOL_DS2202 (osciloscopio):
     def __init__(self, handler):
+        handler.write_termination = "\n"
         super().__init__(handler)
         
         self.SET_CH1_VDIV="CHAN1:SCAL {}"
